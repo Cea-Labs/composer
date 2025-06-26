@@ -79,14 +79,3 @@ class ToolRegistry:
             await server.__aexit__(None, None, None)
             print(f"-> '{server_id}' server shut down.")
         print("-------------------------------\\n")
-
-
-@asynccontextmanager
-async def managed_tool_registry() -> list[MCPServer]:
-    """An async context manager for the ToolRegistry."""
-    registry = ToolRegistry()
-    active_servers = await registry.start_servers()
-    try:
-        yield active_servers
-    finally:
-        await registry.shutdown_servers()

@@ -36,13 +36,16 @@ async def approve_task(task_id: str, background_tasks: BackgroundTasks):
     """
     Approves a generated plan for a task, allowing execution to proceed.
     """
-    if not task_manager.approve_task(task_id):
+    task = task_manager.get_task_status(task_id)
+    if not task or task["status"] != "awaiting_approval":
         raise HTTPException(status_code=400, detail="Task cannot be approved. It might not be awaiting approval or does not exist.")
-    
-    # Trigger the execution of the approved plan in the background.
-    background_tasks.add_task(orchestrator.execute_plan, task_id)
 
-    return {"message": "Task approved. Execution will now proceed."}
+    if task_manager.approve_task(task_id):
+        background_tasks.add_task(orchestrator.trigger_plan_execution, task_id)
+        return {"message": "Task approved. Execution has started."}
+    
+    # This part should ideally not be reached if the above logic is correct.
+    raise HTTPException(status_code=500, detail="Failed to approve task.")
 
 
 @router.get("/tasks/{task_id}", response_model=TaskStatusResponse)

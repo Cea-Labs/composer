@@ -1,8 +1,0 @@
-# Test-specific configuration
-openai:
-  api_key: "TEST_API_KEY_DO_NOT_USE"
-
-tool_registry:
-  # Keep this empty for most unit/integration tests
-  # We can create specific configs for e2e tests later
-  [] 

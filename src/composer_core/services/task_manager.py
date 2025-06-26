@@ -6,7 +6,7 @@ import uuid
 # solution like Redis or a database.
 task_storage: Dict[str, Dict[str, Any]] = {}
 
-TaskStatus = Literal["pending", "awaiting_approval", "completed", "failed"]
+TaskStatus = Literal["pending", "awaiting_approval", "approved", "completed", "failed"]
 
 def create_task(prompt: str) -> str:
     """Creates a new task and stores it."""
@@ -34,8 +34,8 @@ def update_task_plan(task_id: str, plan: str):
 def approve_task(task_id: str) -> bool:
     """Marks a task as approved, allowing execution to continue."""
     if task_id in task_storage and task_storage[task_id]["status"] == "awaiting_approval":
-        task_storage[task_id]["status"] = "pending" # Set back to pending for execution
-        print(f"Task Manager: Approved task {task_id}, resuming.")
+        task_storage[task_id]["status"] = "approved"
+        print(f"Task Manager: Approved task {task_id}, ready for execution.")
         return True
     return False
 

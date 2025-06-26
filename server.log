@@ -1,1 +1,76 @@
-INFO:     127.0.0.1:60986 - "GET /v1/tasks/ HTTP/1.1" 307 Temporary Redirect
+INFO:     Started server process [64660]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Task Manager: Created task a1199da9-76ee-4a1b-8d55-098f72ff3375
+INFO:     127.0.0.1:61370 - "POST /v1/tasks HTTP/1.1" 202 Accepted
+Secure MCP Filesystem Server running on stdio
+Allowed directories: [ '/Users/v7t/dev/agents/composer-core/sample_data' ]
+Server started with options: respect-robots-txt
+Registered 0 existing image resources
+ToolRegistry: Loading configuration from: /Users/v7t/dev/agents/composer-core/config.yaml
+\n--- Starting MCP Servers ---
+Initializing 'filesystem' server of type 'local_stdio'...
+-> 'filesystem' server started successfully.
+Initializing 'fetch' server of type 'local_stdio'...
+-> 'fetch' server started successfully.
+----------------------------\n
+\n--- Setting up Execution Environment ---
+-> 'npx' is available.
+-> File '/Users/v7t/dev/agents/composer-core/src/sample_data/url_to_fetch.txt' already exists.
+-> Ensured MCP fetch download directory exists.
+--------------------------------------\n
+--- Agent Service: Creating Plan ---
+Prompt: 'Read the URL from url_to_fetch.txt and then fetch the content of that website.'
+----------------------------------\n
+\n--- Agent Service: Generated Plan ---
+Here's a step-by-step plan to accomplish the request:
+
+1. Use the `functions.read_file` tool to read the contents of the file named `url_to_fetch.txt` to obtain the URL.
+
+2. Once the URL is retrieved from the file, use the `functions.imageFetch` tool with the URL to fetch the content of the website.
+-----------------------------------
+Task Manager: Updated task a1199da9-76ee-4a1b-8d55-098f72ff3375 with plan, awaiting approval.
+INFO:     127.0.0.1:61389 - "GET /v1/tasks/a1199da9-76ee-4a1b-8d55-098f72ff3375 HTTP/1.1" 200 OK
+Task Manager: Approved task a1199da9-76ee-4a1b-8d55-098f72ff3375, ready for execution.
+INFO:     127.0.0.1:61395 - "POST /v1/tasks/a1199da9-76ee-4a1b-8d55-098f72ff3375/approve HTTP/1.1" 202 Accepted
+Error cleaning up server: Attempted to exit cancel scope in a different task than it was entered in
+Error cleaning up server: Attempted to exit cancel scope in a different task than it was entered in
+--- Agent Service: Executing Step 1/2 ---
+Step Details: 1. Use the `functions.read_file` tool to read the contents of the file named `url_to_fetch.txt` to obtain the URL.
+\n--- Executor Agent Prompt ---
+You are executing one step of a larger plan.\nThe original user request was: 'Read the URL from url_to_fetch.txt and then fetch the content of that website.'\nThe full plan is:\nHere's a step-by-step plan to accomplish the request:
+
+1. Use the `functions.read_file` tool to read the contents of the file named `url_to_fetch.txt` to obtain the URL.
+
+2. Once the URL is retrieved from the file, use the `functions.imageFetch` tool with the URL to fetch the content of the website.\nThe result of the previous step was: 'None'\n\nYour current task is to execute ONLY this step: '1. Use the `functions.read_file` tool to read the contents of the file named `url_to_fetch.txt` to obtain the URL.'\nFocus only on this step. Do not repeat previous steps. Return only the direct output of this step.
+-----------------------------
+\n--- Raw Output from Step 1 ---
+https://v7t.space
+------------------------------------
+--- Agent Service: Executing Step 2/2 ---
+Step Details: 2. Once the URL is retrieved from the file, use the `functions.imageFetch` tool with the URL to fetch the content of the website.
+\n--- Executor Agent Prompt ---
+You are executing one step of a larger plan.\nThe original user request was: 'Read the URL from url_to_fetch.txt and then fetch the content of that website.'\nThe full plan is:\nHere's a step-by-step plan to accomplish the request:
+
+1. Use the `functions.read_file` tool to read the contents of the file named `url_to_fetch.txt` to obtain the URL.
+
+2. Once the URL is retrieved from the file, use the `functions.imageFetch` tool with the URL to fetch the content of the website.\nThe result of the previous step was: 'https://v7t.space'\n\nYour current task is to execute ONLY this step: '2. Once the URL is retrieved from the file, use the `functions.imageFetch` tool with the URL to fetch the content of the website.'\nFocus only on this step. Do not repeat previous steps. Return only the direct output of this step.
+-----------------------------
+\n--- Raw Output from Step 2 ---
+Contents of https://v7t.space: Vishwajit Sasi:
+Select a topic from the navigation menu to begin.
+
+© 2024
+
+Content truncated. 9100 characters of text remaining.
+------------------------------------
+Task Manager: Updated task a1199da9-76ee-4a1b-8d55-098f72ff3375 to completed
+\n--- Shutting Down MCP Servers ---
+Shutting down 'fetch' server...
+-> 'fetch' server shut down.
+Shutting down 'filesystem' server...
+-> 'filesystem' server shut down.
+-------------------------------\n
+INFO:     127.0.0.1:61429 - "GET /v1/tasks/a1199da9-76ee-4a1b-8d55-098f72ff3375 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62836 - "POST /v1/tasks HTTP/1.1" 422 Unprocessable Entity

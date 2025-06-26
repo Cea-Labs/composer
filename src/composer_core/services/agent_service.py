@@ -27,6 +27,12 @@ class AgentService:
         project_root = Path(__file__).parent.parent.parent
         sample_data_dir = project_root / "sample_data"
         sample_data_dir.mkdir(exist_ok=True)
+        url_file = sample_data_dir / "url_to_fetch.txt"
+        if not url_file.exists():
+            url_file.write_text("https://v7t.space")
+            print(f"-> File '{url_file}' created with default URL.")
+        else:
+            print(f"-> File '{url_file}' already exists.")
 
         mcp_fetch_downloads_dir = Path.home() / "Downloads" / "mcp-fetch"
         mcp_fetch_downloads_dir.mkdir(parents=True, exist_ok=True)
@@ -53,7 +59,8 @@ class AgentService:
             instructions=(
                 "You are an executor. Your job is to receive a single step of a plan and execute it precisely. "
                 "You will be given the original user request, the full plan, the result of the previous step, and the current step to execute. "
-                "Use the available tools to perform the action described in the current step."
+                "Use the available tools to perform the action described in the current step. "
+                "If you are using the filesystem and get a path error, try again with a full, absolute path to the resource."
             ),
             mcp_servers=self._mcp_servers,
         )
@@ -85,26 +92,35 @@ class AgentService:
         """
         Runs the executor agent to perform a single step of the plan.
         """
-        plan_steps = plan.strip().split("\\n")
+        # More robustly parse the plan to extract only numbered steps.
+        plan_steps = [
+            line.strip()
+            for line in plan.strip().split("\n")
+            if line.strip() and line.strip()[0].isdigit()
+        ]
         current_step = plan_steps[step_index]
 
-        print(f"--- Agent Service: Executing Step {step_index + 1} ---")
-        print(f"Step: '{current_step}'")
-        print("----------------------------------\\n")
-
+        print(f"--- Agent Service: Executing Step {step_index + 1}/{len(plan_steps)} ---")
+        print(f"Step Details: {current_step}")
+        
         prompt_for_executor = (
-            f"Original user request: '{task_prompt}'\\n"
-            f"Full plan: {plan}\\n"
-            f"Previous step result: '{previous_step_result or 'None'}'\\n"
-            f"Current step to execute: '{current_step}'\\n"
-            "Execute the current step and return the result."
+            f"You are executing one step of a larger plan.\\n"
+            f"The original user request was: '{task_prompt}'\\n"
+            f"The full plan is:\\n{plan}\\n"
+            f"The result of the previous step was: '{previous_step_result or 'None'}'\\n\\n"
+            f"Your current task is to execute ONLY this step: '{current_step}'\\n"
+            f"Focus only on this step. Do not repeat previous steps. Return only the direct output of this step."
         )
+
+        print("\\n--- Executor Agent Prompt ---")
+        print(prompt_for_executor)
+        print("-----------------------------")
 
         result = await Runner.run(self._executor_agent, prompt_for_executor)
         step_output = str(result.final_output)
 
-        print(f"\\n--- Agent Service: Step {step_index + 1} Output ---")
+        print(f"\\n--- Raw Output from Step {step_index + 1} ---")
         print(step_output)
-        print("-----------------------------------")
+        print("------------------------------------")
 
         return step_output 
