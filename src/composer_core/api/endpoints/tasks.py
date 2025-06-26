@@ -16,6 +16,7 @@ class TaskCreationResponse(BaseModel):
 class TaskStatusResponse(BaseModel):
     task_id: str
     status: task_manager.TaskStatus
+    plan: str | None = None
     result: str | None = None
 
 # --- Endpoints ---
@@ -30,6 +31,20 @@ async def submit_task(request: TaskCreationRequest, background_tasks: Background
     return TaskCreationResponse(task_id=task_id)
 
 
+@router.post("/tasks/{task_id}/approve", status_code=202)
+async def approve_task(task_id: str, background_tasks: BackgroundTasks):
+    """
+    Approves a generated plan for a task, allowing execution to proceed.
+    """
+    if not task_manager.approve_task(task_id):
+        raise HTTPException(status_code=400, detail="Task cannot be approved. It might not be awaiting approval or does not exist.")
+    
+    # Trigger the execution of the approved plan in the background.
+    background_tasks.add_task(orchestrator.execute_plan, task_id)
+
+    return {"message": "Task approved. Execution will now proceed."}
+
+
 @router.get("/tasks/{task_id}", response_model=TaskStatusResponse)
 async def get_task_status(task_id: str):
     """
@@ -38,4 +53,9 @@ async def get_task_status(task_id: str):
     status_info = task_manager.get_task_status(task_id)
     if not status_info:
         raise HTTPException(status_code=404, detail="Task not found")
-    return TaskStatusResponse(task_id=task_id, status=status_info["status"], result=status_info["result"]) 
+    return TaskStatusResponse(
+        task_id=task_id,
+        status=status_info["status"],
+        plan=status_info.get("plan"),
+        result=status_info["result"],
+    ) 

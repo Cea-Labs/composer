@@ -13,7 +13,8 @@ class AgentService:
 
     def __init__(self, mcp_servers: list[MCPServer]):
         self._mcp_servers = mcp_servers
-        self._agent = self._define_agent()
+        self._planner_agent = self._define_planner_agent()
+        self._executor_agent = self._define_executor_agent()
         self._setup_environment()
 
     def _setup_environment(self):
@@ -26,44 +27,84 @@ class AgentService:
         project_root = Path(__file__).parent.parent.parent
         sample_data_dir = project_root / "sample_data"
         sample_data_dir.mkdir(exist_ok=True)
-        url_file = sample_data_dir / "url_to_fetch.txt"
-        if not url_file.exists():
-            url_file.write_text("https://example.com")
-            print(f"-> File '{url_file}' created with default URL.")
-        else:
-            print(f"-> File '{url_file}' already exists.")
 
         mcp_fetch_downloads_dir = Path.home() / "Downloads" / "mcp-fetch"
         mcp_fetch_downloads_dir.mkdir(parents=True, exist_ok=True)
         print(f"-> Ensured MCP fetch download directory exists.")
         print("--------------------------------------\\n")
 
-    def _define_agent(self) -> Agent:
-        """Defines the orchestrator agent's properties and tools."""
+    def _define_planner_agent(self) -> Agent:
+        """Defines the planning agent's properties."""
         return Agent(
-            name="OrchestratorAgent",
+            name="PlannerAgent",
             instructions=(
-                "You have access to a sandboxed filesystem tool. "
-                "To read the file you need, you MUST ask the tool to read the file at the exact path 'url_to_fetch.txt'. "
-                "Do NOT add './' or any other directory path to the filename. Request the filename directly. "
-                "After reading the file and getting the URL, use the 'imageFetch' tool to fetch the webpage content."
+                "You are a master planner. Your job is to take a high-level user request "
+                "and create a step-by-step plan to accomplish it using the tools available to you. "
+                "Carefully inspect the tools you have been given and create a numbered plan that uses THEIR EXACT names. "
+                "Do not make up tools. Do not execute the plan, only create it."
             ),
             mcp_servers=self._mcp_servers,
         )
 
-    async def run_task(self, task_prompt: str) -> str:
+    def _define_executor_agent(self) -> Agent:
+        """Defines the executor agent's properties."""
+        return Agent(
+            name="ExecutorAgent",
+            instructions=(
+                "You are an executor. Your job is to receive a single step of a plan and execute it precisely. "
+                "You will be given the original user request, the full plan, the result of the previous step, and the current step to execute. "
+                "Use the available tools to perform the action described in the current step."
+            ),
+            mcp_servers=self._mcp_servers,
+        )
+
+    async def create_plan(self, task_prompt: str) -> str:
         """
-        Runs the agent with a specific task prompt and returns the final output.
+        Runs the planner agent to generate a plan.
         """
-        print(f"--- Agent Service: Running Task ---")
+        print(f"--- Agent Service: Creating Plan ---")
         print(f"Prompt: '{task_prompt}'")
-        print("-----------------------------------\\n")
+        print("----------------------------------\\n")
 
-        result = await Runner.run(self._agent, task_prompt)
+        result = await Runner.run(self._planner_agent, task_prompt)
 
-        final_output = str(result.final_output)
-        print("\\n--- Agent Service: Final Output ---")
-        print(final_output)
+        plan = str(result.final_output)
+        print("\\n--- Agent Service: Generated Plan ---")
+        print(plan)
         print("-----------------------------------")
 
-        return final_output 
+        return plan
+
+    async def execute_step(
+        self,
+        task_prompt: str,
+        plan: str,
+        step_index: int,
+        previous_step_result: str | None,
+    ) -> str:
+        """
+        Runs the executor agent to perform a single step of the plan.
+        """
+        plan_steps = plan.strip().split("\\n")
+        current_step = plan_steps[step_index]
+
+        print(f"--- Agent Service: Executing Step {step_index + 1} ---")
+        print(f"Step: '{current_step}'")
+        print("----------------------------------\\n")
+
+        prompt_for_executor = (
+            f"Original user request: '{task_prompt}'\\n"
+            f"Full plan: {plan}\\n"
+            f"Previous step result: '{previous_step_result or 'None'}'\\n"
+            f"Current step to execute: '{current_step}'\\n"
+            "Execute the current step and return the result."
+        )
+
+        result = await Runner.run(self._executor_agent, prompt_for_executor)
+        step_output = str(result.final_output)
+
+        print(f"\\n--- Agent Service: Step {step_index + 1} Output ---")
+        print(step_output)
+        print("-----------------------------------")
+
+        return step_output 
