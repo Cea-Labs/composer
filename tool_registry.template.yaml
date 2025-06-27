@@ -1,0 +1,31 @@
+# -----------------------------------------------------------------------------
+# MCP Agent Orchestrator - Tool Registry Template
+# -----------------------------------------------------------------------------
+# This is a template file. Copy this to 'tool_registry.yaml' to get started.
+# 'tool_registry.yaml' is gitignored, so you can add private tools there.
+
+tool_registry:
+  - id: "filesystem"
+    enabled: true
+    type: "local_stdio"
+    config:
+      command: "npx"
+      args: ["@modelcontextprotocol/server-filesystem", "composer_core/sample_data"]
+
+  - id: "fetch"
+    enabled: true
+    type: "local_stdio"
+    config:
+      command: "npx"
+      args: ["@kazuph/mcp-fetch"]
+    client_session_timeout_seconds: 120
+
+  # --- Example of a remote server configuration ---
+  # Add your own private remote servers to your local 'tool_registry.yaml'.
+  # - id: "my_private_tool"
+  #   enabled: true
+  #   type: "remote_http"
+  #   config:
+  #     base_url: "https://your.private.tool/api/mcp"
+  #     headers:
+  #       Authorization: "Bearer YOUR_PRIVATE_API_KEY" 

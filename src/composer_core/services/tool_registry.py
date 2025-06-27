@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from contextlib import asynccontextmanager
 
-from agents.mcp import MCPServer, MCPServerStdio
+from agents.mcp import MCPServer, MCPServerStdio, MCPServerStreamableHttp
 from composer_core.constants import PROJECT_ROOT
 # In the future, we would add MCPServerSse and MCPServerStreamableHttp here
 
@@ -48,11 +48,16 @@ class ToolRegistry:
                 if "client_session_timeout_seconds" in server_config:
                     kwargs["client_session_timeout_seconds"] = server_config["client_session_timeout_seconds"]
                 
-                server = MCPServerStdio(command_params, **kwargs)
+                server = MCPServerStdio(command_params, cache_tools_list=True, **kwargs)
             
             # Future server types would be handled here
-            # elif server_type == "remote_http":
-            #     ...
+            elif server_type == "remote_http":
+                config = server_config.get("config", {})
+                base_url = config.get("base_url")
+                if not base_url:
+                    print(f"Warning: 'base_url' not configured for remote_http server '{server_id}'. Skipping.")
+                    continue
+                server = MCPServerStreamableHttp(params={"url": base_url}, cache_tools_list=True)
             # elif server_type == "remote_sse":
             #     ...
 

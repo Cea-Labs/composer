@@ -4,106 +4,104 @@ This project provides a modular, asynchronous, task-based service for orchestrat
 
 ## Architecture
 
-The application is built on a clear separation of concerns, featuring two distinct types of agents and a robust orchestration layer.
+The application is built on a clear separation of concerns, featuring two distinct types of agents, a robust orchestration layer, and a dynamic tool management system.
 
-1.  **Input Service (`api/`)**: A FastAPI server exposing a versioned API for task management. It allows for task creation, status checking, and plan approval.
+```mermaid
+graph TD
+    subgraph User Interaction
+        User -- "1. Submits Prompt via API" --> APIService["FastAPI Service (/v1/tasks)"];
+    end
 
-2.  **Core Agents (`services/agent_service.py`)**:
-    *   **PlannerAgent**: A high-level agent responsible for taking a user's request and, based on a set of available tools, creating a logical, step-by-step plan.
-    *   **ExecutorAgent**: A focused agent that receives a single step from an approved plan and executes it using the available tools. It operates with the context of the original request and the results of previous steps.
+    subgraph Core Orchestration
+        APIService -- "2. Creates Task" --> OrchestratorManager["Orchestrator Manager"];
+        OrchestratorManager -- "3. Manages" --> TaskOrchestrator["Task Orchestrator"];
+        TaskOrchestrator -- "4. Uses" --> AgentService["Agent Service (Planner & Executor)"];
+        AgentService -- "5. Gets Tools From" --> ToolRegistry["Tool Registry"];
+    end
 
-3.  **Orchestration (`services/orchestrator.py`)**:
-    *   **TaskOrchestrator**: Manages the entire lifecycle of a single task, from planning to execution. It ensures that the necessary tools and agent services persist for the task's duration.
-    *   **OrchestratorManager**: A singleton-like manager that holds and provides access to active `TaskOrchestrator` instances, ensuring state is maintained across different API calls.
+    subgraph Tool Ecosystem
+        ToolRegistry -- "6. Manages Lifecycle of" --> LocalTools["Local Tools (Stdio)<br/>e.g., Filesystem, Fetch"];
+        ToolRegistry -- "7. Manages Lifecycle of" --> RemoteTools["Remote Tools (HTTP)<br/>e.g., Notion, Gmail"];
+    end
 
-4.  **Tooling (`services/tool_registry.py` & `config.yaml`)**:
-    *   **ToolRegistry**: Manages the lifecycle of all MCP servers (local or remote) that provide tools to the agents.
-    *   **Configuration (`config.yaml`)**: A single YAML file to define the OpenAI API key and the entire tool registry.
+    subgraph AI Core
+        AgentService -- "8. Sends Prompt + Tool Schemas to" --> LLM["LLM (e.g., OpenAI)"];
+        LLM -- "9. Returns Plan / Action" --> AgentService;
+    end
 
-## Asynchronous Plan-Approve-Execute Workflow
+    style User fill:#c9d,stroke:#333,stroke-width:2px
+    style APIService fill:#bdf,stroke:#333,stroke-width:2px
+    style LLM fill:#f96,stroke:#333,stroke-width:2px
+```
 
-This service operates on a sophisticated asynchronous workflow ideal for long-running, interactive agent tasks.
+## Core Components
 
-1.  **`POST /v1/tasks`**: You submit a task with a high-level prompt (e.g., "Read a file and fetch a URL"). The server immediately responds with a `task_id`. The `PlannerAgent` begins generating a plan in the background.
-
-2.  **`GET /v1/tasks/{task_id}`**: You use the `task_id` to poll this endpoint. The status will initially be `pending`. Once the plan is ready, the status will change to `awaiting_approval`, and the response will contain the generated `plan`.
-
-3.  **`POST /v1/tasks/{task_id}/approve`**: After reviewing the plan, you call this endpoint to give your consent. This triggers the `ExecutorAgent` to begin executing the plan step-by-step in the background.
-
-4.  **`GET /v1/tasks/{task_id}` (Polling for Result)**: You continue to poll the task status endpoint. Once all steps are complete, the status will change to `completed`, and the `result` field will contain the final output of the last step in the plan.
-
-For a detailed visual of the execution flow, see the [Execution Flow Diagram](./diagrams/execution_flow.md).
+1.  **API Service (`api/`)**: A FastAPI server that exposes a versioned API for task management.
+2.  **Orchestration (`services/orchestrator.py`)**: Manages the entire lifecycle of a single task, from planning to execution.
+3.  **Agent Service (`services/agent_service.py`)**: Defines the `PlannerAgent` (creates the plan) and the `ExecutorAgent` (executes the plan).
+4.  **Tool Registry (`services/tool_registry.py`)**: Manages the lifecycle of all MCP servers (local or remote) that provide tools to the agents.
+5.  **Tool Manager (`services/tool_manager.py`)**: Automatically discovers and installs dependencies for local tools defined in the tool registry.
 
 ## Setup & Usage
 
-1.  **Configure `config.yaml`**: Set your `openai.api_key`.
-2.  **Install Dependencies**: `poetry install`
-3.  **Run the Server**: `poetry run start`
+This project uses Poetry for dependency management.
 
-### Interacting with the API
+**1. Create Your Local Configurations:**
 
-Here is an example workflow using `curl` and `jq`:
+You need to create two local configuration files from the provided templates. These files are gitignored, so your private keys and tool configurations will not be committed.
 
-**1. Submit a task to generate a plan:**
+-   **Copy `config.template.yaml` to `config.yaml`:**
+    ```bash
+    cp config.template.yaml config.yaml
+    ```
+    -   Edit `config.yaml` and add your OpenAI API key.
+
+-   **Copy `tool_registry.template.yaml` to `tool_registry.yaml`:**
+    ```bash
+    cp tool_registry.template.yaml tool_registry.yaml
+    ```
+    -   Edit `tool_registry.yaml` to add your private remote tools (e.g., Notion, Gmail). The public `filesystem` and `fetch` tools are already included.
+
+**2. Install Python Dependencies:**
 ```bash
-TASK_ID=$(curl -s -X POST "http://127.0.0.1:8000/v1/tasks" \\
--H "Content-Type: application/json" \\
--d '{
-  "prompt": "Read the URL from ''url_to_fetch.txt'' and then fetch the content of that website."
-}' | jq -r .task_id)
-
-echo "Task submitted with ID: $TASK_ID"
+poetry install
 ```
 
-**2. Check status until awaiting approval (this may take a few moments):**
+**3. Run the Server:**
 ```bash
-# Poll until the status is 'awaiting_approval'
-while true; do
-  STATUS_INFO=$(curl -s "http://127.0.0.1:8000/v1/tasks/$TASK_ID")
-  STATUS=$(echo "$STATUS_INFO" | jq -r .status)
-  echo "Current status: $STATUS"
-  if [ "$STATUS" == "awaiting_approval" ]; then
-    echo "Plan is ready for approval:"
-    echo "$STATUS_INFO" | jq .plan
-    break
-  fi
-  sleep 2
-done
+poetry run start
+```
+When you run the server, the `ToolManager` will automatically inspect your `tool_registry.yaml` and install any required `npm` packages for the local tools.
+
+## Interacting with the API
+
+The API workflow remains the same. You can use `curl` or any other HTTP client to interact with the service.
+
+**1. Submit a task:**
+```bash
+# ... (curl command to submit task)
+```
+
+**2. Check status until awaiting approval:**
+```bash
+# ... (curl command to check status)
 ```
 
 **3. Approve the plan:**
 ```bash
-curl -s -X POST "http://127.0.0.1:8000/v1/tasks/$TASK_ID/approve"
+# ... (curl command to approve plan)
 ```
 
 **4. Check the final result:**
 ```bash
-# Wait for the agent to execute...
-echo "Waiting for execution to complete..."
-sleep 15
-
-curl -s "http://127.0.0.1:8000/v1/tasks/$TASK_ID" | jq .
+# ... (curl command to get final result)
 ```
 
 ## Testing
 
-Run the unit and integration tests with: `poetry run pytest`
-
-### End-to-End Test
-
-To run a full, end-to-end test that starts the server and makes a real request, run the following script from the `mcp-agent-orchestrator` directory:
+To run a full, end-to-end test that starts the server and makes a real request, use the test script in the `MCPschema_check` directory.
 
 ```bash
-poetry run python scripts/run_e2e_test.py
+poetry run python MCPschema_check/comprehensive_e2e_test.py
 ```
-
-**Note:** If you get an "address already in use" error, it means a server process from a previous run was not shut down correctly. You can find and stop the process using the following commands:
-
-1.  **Find the process ID (PID)**:
-    ```bash
-    lsof -i :8000
-    ```
-2.  **Stop the process**:
-    ```bash
-    kill -9 <PID>
-    ``` 
+This script now serves as the primary end-to-end test. 

@@ -6,4 +6,28 @@ server_test.log
 .venv/
 
 # Python
-__pycache__/ 
+__pycache__/
+*.pyc
+.venv/
+/.mypy_cache/
+/.pytest_cache/
+/build/
+/dist/
+*.egg-info/
+
+# Local configuration
+config.yaml
+tool_registry.yaml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+/.mypy_cache/
+/.pytest_cache/
+/build/
+/dist/
+*.egg-info/
+
+# Local configuration
+config.yaml 
