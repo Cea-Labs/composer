@@ -6,10 +6,10 @@ set -e
 
 # --- Configuration ---
 HOST="http://127.0.0.1:8000"
-PROMPT="Read the URL from 'url_to_fetch.txt' and then fetch the content of that website."
+PROMPT="Fetch the content of 'https://en.wikipedia.org/wiki/Wikipedia:Unusual_articles', summarize it, and then write the summary to a new file named 'unusual_articles_summary.txt'."
 CURL_OPTS="-sf" # -s for silent, -f to fail on server errors (4xx, 5xx)
 SERVER_PID=""
-SERVER_LOG="composer-core/server_test.log"
+SERVER_LOG="logs/server_test.log"
 
 # --- Cleanup function to be called on exit ---
 cleanup() {
@@ -42,6 +42,10 @@ cleanup() {
 # Trap EXIT signal to run cleanup function no matter how the script ends
 trap cleanup EXIT
 
+# --- Install Tool Dependencies ---
+echo "--- Installing Tool Dependencies ---"
+npm install -g @modelcontextprotocol/server-filesystem @kazuph/mcp-fetch
+
 # --- Start Server ---
 echo "--- Preparing Server ---"
 
@@ -53,7 +57,7 @@ lsof -ti tcp:8000 | xargs kill -9 2>/dev/null || echo "No existing process found
 
 echo "Starting server in the background, logs will be in $SERVER_LOG"
 # Start the server, redirecting both stdout and stderr to the log file
-(cd composer-core && poetry run start &> "server_test.log" &)
+(cd src && poetry run start &> "../$SERVER_LOG" &)
 SERVER_PID=$!
 
 # --- Wait for Server to be Ready ---
@@ -88,6 +92,7 @@ if [ -z "$TASK_ID" ] || [ "$TASK_ID" == "null" ]; then
 fi
 
 echo "Task created successfully. Task ID: $TASK_ID"
+echo "Polling URL: $HOST/v1/tasks/$TASK_ID"
 
 # --- 2. Poll for 'awaiting_approval' status ---
 echo
@@ -115,36 +120,20 @@ done
 
 # --- 3. Approve the task ---
 echo
-echo "Approving the plan..."
+echo "Approving the plan via POST to $HOST/v1/tasks/$TASK_ID/approve"
 curl $CURL_OPTS -X POST "$HOST/v1/tasks/$TASK_ID/approve" > /dev/null
 echo "Plan approved."
 
-# --- 4. Poll for 'completed' status ---
+# --- 4. Stream live events ---
 echo
-echo "Polling for 'completed' status..."
-while true; do
-    STATUS_INFO=$(curl $CURL_OPTS "$HOST/v1/tasks/$TASK_ID")
-    STATUS=$(echo "$STATUS_INFO" | jq -r .status)
+echo "Streaming live events from $HOST/v1/tasks/$TASK_ID/stream"
+curl -s -N "$HOST/v1/tasks/$TASK_ID/stream"
 
-    printf "Current status: %s\r" "$STATUS"
-
-    if [ "$STATUS" == "completed" ]; then
-        echo
-        echo
-        echo "--- Test Succeeded! ---"
-        echo "Final Result:"
-        echo "$STATUS_INFO" | jq .
-        break
-    elif [ "$STATUS" == "failed" ]; then
-        echo
-        echo
-        echo "--- Test Failed! ---"
-        echo "Error details:"
-        echo "$STATUS_INFO" | jq .
-        exit 1
-    fi
-
-    sleep 3
-done
-
+echo
+echo "--- Stream Closed ---"
+echo
+echo "--- Final Task Status ---"
+curl -s "$HOST/v1/tasks/$TASK_ID" | jq .
+echo "-------------------------"
+echo
 echo "--- End-to-End Test Finished ---" 

@@ -35,8 +35,16 @@ def create_app(config_path: Path | None = None) -> FastAPI:
 # --- Server Runner ---
 def run_server():
     """A convenience function to run the Uvicorn server."""
-    app = create_app()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    config_path = PROJECT_ROOT / "config.yaml"
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+    
+    server_config = config.get("server", {})
+    host = server_config.get("host", "0.0.0.0")
+    port = server_config.get("port", 8000)
+    
+    app = create_app(config_path=config_path)
+    uvicorn.run(app, host=host, port=port)
 
 # This approach allows the app to be created with a specific config, making testing easier.
 # We no longer define 'app' at the module level.

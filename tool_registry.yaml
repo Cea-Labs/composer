@@ -1,0 +1,37 @@
+# -----------------------------------------------------------------------------
+# MCP Agent Orchestrator - Tool Registry
+# -----------------------------------------------------------------------------
+
+# This section defines all the tools (MCP Servers) available to the agent.
+# The 'type' field determines how the server is initialized and managed.
+tool_registry:
+  # - id: "unique_tool_server_name"
+  #   enabled: true
+  #   type: "local_stdio" | "remote_http" | "remote_sse"
+  #   ... other config ...
+
+  - id: "filesystem"
+    enabled: true
+    type: "local_stdio"
+    # For 'local_stdio', the config contains the command to run the server.
+    config:
+      command: "npx"
+      args: ["@modelcontextprotocol/server-filesystem", "composer_core/sample_data"]
+
+  - id: "fetch"
+    enabled: true
+    type: "local_stdio"
+    config:
+      command: "npx"
+      args: ["@kazuph/mcp-fetch"]
+    # We can add server-specific parameters here.
+    client_session_timeout_seconds: 120
+
+  # --- Example of a future remote server configuration ---
+  # - id: "smithery_example"
+  #   enabled: false
+  #   type: "remote_http"
+  #   config:
+  #     base_url: "https://mcp.smithery.com/v1/some-tool"
+  #     headers:
+  #       Authorization: "Bearer YOUR_SMITHERY_API_KEY" 

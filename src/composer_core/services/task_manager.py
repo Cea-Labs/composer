@@ -6,7 +6,7 @@ import uuid
 # solution like Redis or a database.
 task_storage: Dict[str, Dict[str, Any]] = {}
 
-TaskStatus = Literal["pending", "awaiting_approval", "approved", "completed", "failed"]
+TaskStatus = Literal["pending", "awaiting_approval", "approved", "executing", "completed", "failed"]
 
 def create_task(prompt: str) -> str:
     """Creates a new task and stores it."""

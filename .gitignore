@@ -1,0 +1,6 @@
+# Logs
+logs/
+server_test.log
+
+# Poetry
+.venv/ 

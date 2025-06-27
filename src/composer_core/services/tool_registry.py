@@ -13,7 +13,7 @@ class ToolRegistry:
     """
 
     def __init__(self):
-        self._config_path = PROJECT_ROOT / "config.yaml"
+        self._config_path = PROJECT_ROOT / "tool_registry.yaml"
         self._config = self._load_config()
         self._server_contexts: list[MCPServer] = []
 

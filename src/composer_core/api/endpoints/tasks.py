@@ -1,8 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 
 from composer_core.services import task_manager
 from composer_core.services import orchestrator
+from composer_core.services.event_service import event_service
 
 router = APIRouter()
 
@@ -61,4 +63,19 @@ async def get_task_status(task_id: str):
         status=status_info["status"],
         plan=status_info.get("plan"),
         result=status_info["result"],
-    ) 
+    )
+
+@router.get("/tasks/{task_id}/stream")
+async def stream_task_events(task_id: str, request: Request):
+    """
+    Streams live status events for a given task.
+    """
+    async def event_generator():
+        async for message in event_service.subscribe(task_id):
+            if await request.is_disconnected():
+                break
+            if message == "[DONE]":
+                break
+            yield message
+
+    return EventSourceResponse(event_generator()) 

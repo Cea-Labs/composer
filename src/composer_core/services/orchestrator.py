@@ -5,8 +5,10 @@ from composer_core.services.agent_service import AgentService
 from composer_core.services.tool_registry import ToolRegistry
 from composer_core.services import task_manager
 from composer_core.constants import PROJECT_ROOT
+from composer_core.services.event_service import event_service
 
 CONFIG_PATH = PROJECT_ROOT / "config.yaml"
+LOGS_DIR = PROJECT_ROOT / "logs"
 
 class OrchestratorManager:
     """A singleton-like manager to hold active TaskOrchestrator instances."""
@@ -30,19 +32,22 @@ class TaskOrchestrator:
     Manages the entire lifecycle of a single task, from planning to execution.
     This ensures that the AgentService and its tools persist for the task's duration.
     """
+
     def __init__(self, task_id: str, prompt: str):
         self.task_id = task_id
         self.prompt = prompt
-        self.agent_service: AgentService | None = None
         self.tool_registry = ToolRegistry()
+        self.agent_service: AgentService | None = None
         self.active_servers: list | None = None
-        self.log_file = PROJECT_ROOT / f"task_{task_id}.log"
-        self._log(f"Orchestrator initialized for task {task_id}.")
+        LOGS_DIR.mkdir(exist_ok=True)
+        self.log_file = LOGS_DIR / f"task_{self.task_id}.log"
+        self._log(f"Orchestrator initialized for task {self.task_id}.")
 
     def _log(self, message: str):
         """Logs a message to the task-specific log file."""
         with open(self.log_file, "a") as f:
             f.write(f"[{datetime.now()}] {message}\\n")
+        asyncio.create_task(event_service.publish(self.task_id, message))
 
     async def initialize(self):
         """Starts the tool servers for the duration of the task."""
@@ -77,6 +82,7 @@ class TaskOrchestrator:
             self._log("No plan found. Aborting execution.")
             await self.shutdown()
             OrchestratorManager.cleanup_orchestrator(self.task_id)
+            await event_service.publish(self.task_id, "[DONE]")
             return
 
         await self.initialize()
@@ -91,18 +97,20 @@ class TaskOrchestrator:
         last_result = None
         for i, step in enumerate(plan_steps):
             self._log(f"Executing step {i+1}/{len(plan_steps)}: {step}")
+            task_manager.update_task_result(self.task_id, "executing", f"Executing step {i+1}: {step}")
             last_result = await self.agent_service.execute_step(
                 task_prompt=self.prompt,
                 plan=plan,
                 step_index=i,
                 previous_step_result=last_result,
             )
-            self._log(f"Result from step {i+1}: {last_result}")
+            self._log(f"Finished step {i+1}. Result: {last_result}")
 
         task_manager.update_task_result(self.task_id, "completed", last_result)
         self._log("Plan Execution Finished.")
         await self.shutdown()
         OrchestratorManager.cleanup_orchestrator(self.task_id)
+        await event_service.publish(self.task_id, "[DONE]")
 
 async def run_task_and_update_status(task_id: str, prompt: str):
     """
@@ -115,6 +123,7 @@ async def run_task_and_update_status(task_id: str, prompt: str):
         print(f"--- Orchestrator: Task failed for task_id {task_id} ---")
         print(f"Error: {e}")
         task_manager.update_task_result(task_id, "failed", str(e))
+        await event_service.publish(task_id, "[DONE]")
 
 async def trigger_plan_execution(task_id: str):
     """
