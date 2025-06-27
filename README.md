@@ -1,6 +1,6 @@
-# MCP Agent Service - Plan and Execute
+# Composer: An AI Workflow Orchestration Engine
 
-This project provides a modular, asynchronous, task-based service for orchestrating sophisticated AI agents. It uses a **Plan and Execute** model with human-in-the-loop approval, allowing agents to tackle complex, multi-step tasks by first creating a plan, awaiting human consent, and then executing that plan step-by-step.
+This project is a backend service that dynamically composes executable workflows from high-level prompts. It uses a **Plan and Execute** model, leveraging a diverse ecosystem of both local and remote tools to build and run complex, multi-step automated processes.
 
 ## Architecture
 
@@ -132,9 +132,9 @@ curl -s "http://127.0.0.1:8000/v1/tasks/$TASK_ID" | jq .
 
 ## Testing
 
-To run a full, end-to-end test that starts the server and makes a real request, use the test script in the `MCPschema_check` directory.
+To run a full, end-to-end test that starts the server and makes a real request, use the test script in the `test_flows` directory.
 
 ```bash
-poetry run python MCPschema_check/comprehensive_e2e_test.py
+poetry run python test_flows/comprehensive_e2e_test.py
 ```
 This script now serves as the primary end-to-end test. 
