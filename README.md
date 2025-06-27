@@ -4,34 +4,61 @@ This project provides a modular, asynchronous, task-based service for orchestrat
 
 ## Architecture
 
-The application is built on a clear separation of concerns, featuring two distinct types of agents, a robust orchestration layer, and a dynamic tool management system.
+The system is composed of two primary flows: application startup and task execution.
+
+### Application Startup Flow
+
+When the server is started, it first ensures all necessary tool dependencies are installed before activating the API.
 
 ```mermaid
 graph TD
-    subgraph User Interaction
-        User -- "1. Submits Prompt via API" --> APIService["FastAPI Service (/v1/tasks)"];
+    A["User runs 'poetry run start'"] --> B["main.py: run_server()"];
+    B --> C["ToolManager: setup_tools()"];
+    C -- "Installs/Verifies NPM packages" --> D["ToolRegistry: start_servers()"];
+    D -- "Initializes MCP Clients <br/>(local & remote)" --> E["FastAPI Service Starts"];
+    E --> F["API is live and ready for requests"];
+
+    style A fill:#c9d,stroke:#333,stroke-width:2px;
+    style F fill:#9d9,stroke:#333,stroke-width:2px;
+```
+
+### Task Execution Flow
+
+Once running, the service follows a structured, asynchronous process to handle user requests.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant APIService
+    participant Orchestrator
+    participant AgentService
+    participant ToolServers
+    participant LLM
+
+    User->>APIService: POST /v1/tasks (Prompt)
+    APIService->>Orchestrator: Run new task
+    Orchestrator->>AgentService: Create Plan
+    AgentService->>ToolServers: list_tools()
+    ToolServers-->>AgentService: Return Tool Schemas
+    AgentService->>LLM: Generate plan from prompt + schemas
+    LLM-->>AgentService: Return Plan (e.g., [step 1, step 2])
+    AgentService-->>Orchestrator: Store Plan
+    Orchestrator-->>APIService: Update Status: "awaiting_approval"
+
+    User->>APIService: POST /v1/tasks/{id}/approve
+    APIService->>Orchestrator: Execute Plan
+    
+    loop For each step in Plan
+        Orchestrator->>AgentService: Execute Step
+        AgentService->>LLM: Determine which tool to call for step
+        LLM-->>AgentService: Return Tool Call (e.g., fetch(url))
+        AgentService->>ToolServers: call_tool(tool_name, args)
+        ToolServers-->>AgentService: Return Result
+        AgentService-->>Orchestrator: Step Result
     end
 
-    subgraph Core Orchestration
-        APIService -- "2. Creates Task" --> OrchestratorManager["Orchestrator Manager"];
-        OrchestratorManager -- "3. Manages" --> TaskOrchestrator["Task Orchestrator"];
-        TaskOrchestrator -- "4. Uses" --> AgentService["Agent Service (Planner & Executor)"];
-        AgentService -- "5. Gets Tools From" --> ToolRegistry["Tool Registry"];
-    end
-
-    subgraph Tool Ecosystem
-        ToolRegistry -- "6. Manages Lifecycle of" --> LocalTools["Local Tools (Stdio)<br/>e.g., Filesystem, Fetch"];
-        ToolRegistry -- "7. Manages Lifecycle of" --> RemoteTools["Remote Tools (HTTP)<br/>e.g., Notion, Gmail"];
-    end
-
-    subgraph AI Core
-        AgentService -- "8. Sends Prompt + Tool Schemas to" --> LLM["LLM (e.g., OpenAI)"];
-        LLM -- "9. Returns Plan / Action" --> AgentService;
-    end
-
-    style User fill:#c9d,stroke:#333,stroke-width:2px
-    style APIService fill:#bdf,stroke:#333,stroke-width:2px
-    style LLM fill:#f96,stroke:#333,stroke-width:2px
+    Orchestrator-->>APIService: Update Status: "completed"
+    APIService-->>User: GET /v1/tasks/{id} (Final Result)
 ```
 
 ## Core Components
