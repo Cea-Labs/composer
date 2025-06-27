@@ -27,6 +27,18 @@ tool_registry:
     # We can add server-specific parameters here.
     client_session_timeout_seconds: 120
 
+  - id: "gmail"
+    enabled: true
+    type: "remote_http"
+    config:
+      base_url: "https://mcp.composio.dev/composio/server/f6538aa7-83ac-4c2e-9061-0430c9738110/mcp"
+
+  - id: "notion"
+    enabled: true
+    type: "remote_http"
+    config:
+      base_url: "https://mcp.composio.dev/composio/server/d7771cc2-9dd9-4591-aa89-c92741815ee2/mcp"
+
   # --- Example of a future remote server configuration ---
   # - id: "smithery_example"
   #   enabled: false
