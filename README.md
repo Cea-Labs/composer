@@ -4,27 +4,7 @@ This project provides a modular, asynchronous, task-based service for orchestrat
 
 ## Architecture
 
-The system is composed of two primary flows: application startup and task execution.
-
-### Application Startup Flow
-
-When the server is started, it first ensures all necessary tool dependencies are installed before activating the API.
-
-```mermaid
-graph TD
-    A["User runs 'poetry run start'"] --> B["main.py: run_server()"];
-    B --> C["ToolManager: setup_tools()"];
-    C -- "Installs/Verifies NPM packages" --> D["ToolRegistry: start_servers()"];
-    D -- "Initializes MCP Clients <br/>(local & remote)" --> E["FastAPI Service Starts"];
-    E --> F["API is live and ready for requests"];
-
-    style A fill:#c9d,stroke:#333,stroke-width:2px;
-    style F fill:#9d9,stroke:#333,stroke-width:2px;
-```
-
-### Task Execution Flow
-
-Once running, the service follows a structured, asynchronous process to handle user requests.
+The system follows a structured, asynchronous process to handle user requests.
 
 ```mermaid
 sequenceDiagram
@@ -102,26 +82,52 @@ When you run the server, the `ToolManager` will automatically inspect your `tool
 
 ## Interacting with the API
 
-The API workflow remains the same. You can use `curl` or any other HTTP client to interact with the service.
+Here is an example workflow using `curl` and `jq`.
 
-**1. Submit a task:**
+**1. Submit a task to generate a plan:**
 ```bash
-# ... (curl command to submit task)
+TASK_ID=$(curl -s -X POST "http://127.0.0.1:8000/v1/tasks" \\
+-H "Content-Type: application/json" \\
+-d '{
+  "prompt": "Read the URL from ''composer_core/sample_data/url_to_fetch.txt'' and then fetch the content of that website."
+}' | jq -r .task_id)
+
+echo "Task submitted with ID: $TASK_ID"
 ```
 
 **2. Check status until awaiting approval:**
 ```bash
-# ... (curl command to check status)
+# Poll until the status is 'awaiting_approval'
+while true; do
+  STATUS_INFO=$(curl -s "http://127.0.0.1:8000/v1/tasks/$TASK_ID")
+  STATUS=$(echo "$STATUS_INFO" | jq -r .status)
+  echo "Current status: $STATUS"
+  if [ "$STATUS" == "awaiting_approval" ]; then
+    echo "Plan is ready for approval:"
+    echo "$STATUS_INFO" | jq .plan
+    break
+  elif [ "$STATUS" == "failed" ]; then
+    echo "Task Failed:"
+    echo "$STATUS_INFO" | jq .
+    exit 1
+  fi
+  sleep 2
+done
 ```
 
 **3. Approve the plan:**
 ```bash
-# ... (curl command to approve plan)
+curl -s -X POST "http://127.0.0.1:8000/v1/tasks/$TASK_ID/approve"
+echo "\\nPlan approved. Waiting for execution..."
 ```
 
 **4. Check the final result:**
 ```bash
-# ... (curl command to get final result)
+# Wait for the agent to execute...
+sleep 10
+
+echo "\\nFinal Task Status:"
+curl -s "http://127.0.0.1:8000/v1/tasks/$TASK_ID" | jq .
 ```
 
 ## Testing
