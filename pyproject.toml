@@ -1,26 +1,70 @@
-[tool.poetry]
-name = "composer-core"
+[project]
+name = "agent-runtime-service"
 version = "0.1.0"
-description = "A project demonstrating the orchestration of multiple MCP servers with the openai-agents-sdk."
-authors = ["Your Name <you@example.com>"]
+description = "Agent runtime service for orchestrating LLM agents with MCP server integration"
 readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Agent Runtime Team", email = "team@agentruntime.dev"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "openai-agents>=0.0.19",
+    "pyyaml>=6.0",
+    "fastapi>=0.115.13",
+    "uvicorn[standard]>=0.34.3",
+    "sse-starlette>=2.2.0",
+    "jinja2>=3.1.0",
+    "python-multipart>=0.0.6",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-openai-agents = {extras = ["mcp"], version = "^0.0.19"}
-pyyaml = ">=6.0"
-fastapi = "^0.115.13"
-uvicorn = {extras = ["standard"], version = "^0.34.3"}
-sse-starlette = "^2.2.0"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.28.1",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.4.1"
-pytest-asyncio = "^0.23.0"
-httpx = "^0.28.1"
+[project.scripts]
+agent-runtime = "agent_runtime.api.main:run_server"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.scripts]
-start = "composer_core.api.main:run_server" 
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_runtime"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.28.1",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

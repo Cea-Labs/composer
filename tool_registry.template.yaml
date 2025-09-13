@@ -10,7 +10,7 @@ tool_registry:
     type: "local_stdio"
     config:
       command: "npx"
-      args: ["@modelcontextprotocol/server-filesystem", "composer_core/sample_data"]
+      args: ["@modelcontextprotocol/server-filesystem", "src/agent_runtime/sample_data"]
 
   - id: "fetch"
     enabled: true

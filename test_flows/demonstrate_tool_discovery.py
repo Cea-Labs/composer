@@ -11,7 +11,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 # Now we can import from the agents library and our local modules
 from agents.mcp import MCPServerStdio, MCPServerStreamableHttp
-from composer_core.services.tool_manager import setup_tools
+from agent_runtime.services.tool_manager import setup_tools
 
 # --- Main Demonstration Logic ---
 
@@ -91,7 +91,7 @@ async def demonstrate_tool_discovery():
 
 if __name__ == "__main__":
     # Point the tool_manager to the correct path for this script
-    from composer_core.services import tool_manager
+    from agent_runtime.services import tool_manager
     tool_manager.TOOL_REGISTRY_PATH = PROJECT_ROOT / "tool_registry.yaml"
 
     try:

@@ -55,10 +55,10 @@ async def run_comprehensive_test():
         with open(SERVER_LOG, "w") as log_file:
             server_process = subprocess.Popen(
                 ["poetry", "run", "start"],
-                cwd=PROJECT_ROOT / "src",
+                cwd=PROJECT_ROOT,
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
-                env={**os.environ, "COMPOSER_CONFIG": str(PROJECT_ROOT / "config.yaml")}
+                env={**os.environ, "AGENT_RUNTIME_CONFIG": str(PROJECT_ROOT / "config.yaml")}
             )
         
         if not await wait_for_server():

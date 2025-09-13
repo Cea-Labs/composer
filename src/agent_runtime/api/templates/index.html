@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .nav-tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #2a5298;
+            border-bottom: 3px solid #2a5298;
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .api-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .api-section h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.connected {
+            background: #28a745;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 150px 120px auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(66, 153, 225, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        }
+        
+        .results-section {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .results-section h4 {
+            color: #68d391;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .log-entry {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .log-entry.error {
+            border-left-color: #f56565;
+            background: rgba(245, 101, 101, 0.1);
+        }
+        
+        .log-entry.success {
+            border-left-color: #68d391;
+            background: rgba(104, 211, 145, 0.1);
+        }
+        
+        .log-timestamp {
+            color: #a0aec0;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .log-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2a5298;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .endpoint-selector {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .method-get { background: #28a745; color: white; }
+        .method-post { background: #007bff; color: white; }
+        .method-put { background: #ffc107; color: black; }
+        .method-delete { background: #dc3545; color: white; }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .task-workflow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .workflow-step {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .workflow-step.active {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+        
+        .workflow-step.completed {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        
+        .workflow-arrow {
+            color: #bdc3c7;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Agent Runtime Service</h1>
+            <p>Visual API Testing Console</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
+            <button class="nav-tab" onclick="showTab('api-test')">API Testing</button>
+            <button class="nav-tab" onclick="showTab('workflows')">Workflows</button>
+            <button class="nav-tab" onclick="showTab('health')">System Health</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="uptime">--</div>
+                    <div class="metric-label">Uptime</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="total-requests">0</div>
+                    <div class="metric-label">Total Requests</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="active-tasks">0</div>
+                    <div class="metric-label">Active Tasks</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="success-rate">100%</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+            </div>
+            
+            <div class="api-section">
+                <h3>🎯 Available Endpoints</h3>
+                <div id="endpoints-list">
+                    <div><span class="method-badge method-get">GET</span> <code>/docs</code> - API Documentation</div>
+                    <div><span class="method-badge method-get">GET</span> <code>/openapi.json</code> - OpenAPI Specification</div>
+                    <div><span class="method-badge method-post">POST</span> <code>/v1/tasks</code> - Submit Task</div>
+                    <div><span class="method-badge method-get">GET</span> <code>/v1/tasks/{id}</code> - Get Task Status</div>
+                    <div><span class="method-badge method-post">POST</span> <code>/v1/tasks/{id}/approve</code> - Approve Task</div>
+                    <div><span class="method-badge method-get">GET</span> <code>/v1/tasks/{id}/stream</code> - Stream Results</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Testing Tab -->
+        <div id="api-test" class="tab-content">
+            <div class="api-section">
+                <h3>
+                    <span class="status-indicator" id="api-status"></span>
+                    API Testing Console
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="api-endpoint">Endpoint</label>
+                        <select id="api-endpoint">
+                            <option value="/docs">GET /docs</option>
+                            <option value="/openapi.json">GET /openapi.json</option>
+                            <option value="/v1/tasks" data-method="POST">POST /v1/tasks</option>
+                            <option value="/v1/tasks/{id}" data-method="GET">GET /v1/tasks/{id}</option>
+                            <option value="/v1/tasks/{id}/approve" data-method="POST">POST /v1/tasks/{id}/approve</option>
+                            <option value="/v1/tasks/{id}/stream" data-method="GET">GET /v1/tasks/{id}/stream</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-id">Task ID</label>
+                        <input type="text" id="task-id" placeholder="Auto-filled">
+                    </div>
+                    <div class="form-group">
+                        <label for="http-method">Method</label>
+                        <select id="http-method">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn" onclick="executeApiCall()">
+                            <span id="api-spinner" class="spinner hidden"></span>
+                            Execute
+                        </button>
+                        <button class="btn btn-success" onclick="quickHealthCheck()">Quick Health</button>
+                        <button class="btn btn-success" onclick="quickTaskTest()">Quick Task</button>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="payload-section" style="display: none;">
+                    <label for="api-payload">Request Payload (JSON)</label>
+                    <textarea id="api-payload" rows="4" placeholder='{"prompt": "Create a file called test.txt"}'></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Workflows Tab -->
+        <div id="workflows" class="tab-content">
+            <div class="api-section">
+                <h3>🔄 Task Workflow Management</h3>
+                
+                <div class="task-workflow">
+                    <div class="workflow-step completed">Submit Task</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step active">Generate Plan</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">Approve Plan</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">Execute</div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">Complete</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="workflow-prompt">Natural Language Task</label>
+                    <textarea id="workflow-prompt" rows="3" placeholder="Create a summary report of today's activities">Create a file called workflow-test.txt with the message 'Cellery workflow system is working!'</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn" onclick="submitWorkflow()">Submit Task</button>
+                    <button class="btn" onclick="checkWorkflowStatus()" id="check-status-btn" disabled>Check Status</button>
+                    <button class="btn btn-success" onclick="approveWorkflow()" id="approve-btn" disabled>Approve Plan</button>
+                    <button class="btn btn-danger" onclick="streamWorkflow()" id="stream-btn" disabled>Stream Results</button>
+                </div>
+                
+                <div id="current-workflow" class="hidden">
+                    <strong>Current Task:</strong> <span id="workflow-task-id"></span>
+                    <span id="workflow-status-badge" class="method-badge method-get">Pending</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Health Tab -->
+        <div id="health" class="tab-content">
+            <div class="api-section">
+                <h3>🏥 System Health Monitor</h3>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="health-status">Unknown</div>
+                        <div class="metric-label">Service Status</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="response-time">--ms</div>
+                        <div class="metric-label">Response Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="mcp-servers">0</div>
+                        <div class="metric-label">MCP Servers</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="memory-usage">--</div>
+                        <div class="metric-label">Memory Usage</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn" onclick="runHealthCheck()">Run Health Check</button>
+                    <button class="btn" onclick="runPerformanceTest()">Performance Test</button>
+                    <button class="btn btn-danger" onclick="runStressTest()">Stress Test</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section (shared across all tabs) -->
+        <div class="results-section">
+            <h4>📋 Execution Log</h4>
+            <div id="results-log">
+                <div class="log-entry">
+                    <div class="log-timestamp">{{ request.url.hostname }} - Ready</div>
+                    <div class="log-content">Web interface loaded. Select a tab above to start testing the Agent Runtime Service.</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-danger" onclick="clearLog()">Clear Log</button>
+                <button class="btn" onclick="exportResults()">Export Results</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        const API_BASE = '{{ api_base }}';
+        let currentTaskId = null;
+        let eventSource = null;
+        
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            // Load tab-specific data
+            if (tabName === 'health') {
+                runHealthCheck();
+            } else if (tabName === 'overview') {
+                loadOverviewData();
+            } else if (tabName === 'workflows') {
+                // Refresh current workflow status when switching to workflows tab
+                refreshCurrentTask();
+            }
+        }
+        
+        // Logging functions
+        function logMessage(message, type = 'info', data = null) {
+            const timestamp = new Date().toISOString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            
+            let content = message;
+            if (data && typeof data === 'object') {
+                content += '\n' + JSON.stringify(data, null, 2);
+            } else if (data) {
+                content += '\n' + String(data);
+            }
+            
+            logEntry.innerHTML = `
+                <div class="log-timestamp">${timestamp}</div>
+                <div class="log-content">${content}</div>
+            `;
+            
+            const log = document.getElementById('results-log');
+            log.appendChild(logEntry);
+            logEntry.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // API call functions
+        async function makeApiCall(endpoint, options = {}) {
+            const startTime = Date.now();
+            try {
+                logMessage(`🔄 ${options.method || 'GET'} ${endpoint}`, 'info');
+                
+                const response = await fetch(API_BASE + endpoint, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                const responseTime = Date.now() - startTime;
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('Content-Type');
+                    let data;
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        data = await response.json();
+                    } else {
+                        data = await response.text();
+                    }
+                    
+                    logMessage(`✅ Success: ${response.status} (${responseTime}ms)`, 'success', data);
+                    updateConnectionStatus(true);
+                    return { success: true, data, responseTime, status: response.status };
+                } else {
+                    const errorData = await response.text();
+                    logMessage(`❌ Error: ${response.status} ${response.statusText} (${responseTime}ms)`, 'error', errorData);
+                    updateConnectionStatus(false);
+                    return { success: false, error: errorData, responseTime, status: response.status };
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                logMessage(`💥 Network error: ${error.message} (${responseTime}ms)`, 'error');
+                updateConnectionStatus(false);
+                return { success: false, error: error.message, responseTime };
+            }
+        }
+        
+        function updateConnectionStatus(connected) {
+            const indicators = document.querySelectorAll('.status-indicator');
+            indicators.forEach(indicator => {
+                indicator.className = connected ? 'status-indicator connected' : 'status-indicator';
+            });
+        }
+        
+        // API testing functions
+        async function executeApiCall() {
+            const endpoint = document.getElementById('api-endpoint').value;
+            const method = document.getElementById('http-method').value;
+            const payload = document.getElementById('api-payload').value.trim();
+            const taskId = document.getElementById('task-id').value.trim();
+            
+            let actualEndpoint = endpoint;
+            if (endpoint.includes('{id}') && taskId) {
+                actualEndpoint = endpoint.replace('{id}', taskId);
+            } else if (endpoint.includes('{id}') && !taskId) {
+                logMessage('❌ Task ID required for this endpoint', 'error');
+                return;
+            }
+            
+            const options = { method };
+            
+            // Handle payload for POST/PUT requests
+            if (payload && (method === 'POST' || method === 'PUT')) {
+                try {
+                    // Try to parse as JSON first
+                    const parsedPayload = JSON.parse(payload);
+                    options.body = JSON.stringify(parsedPayload);
+                } catch (e) {
+                    logMessage(`❌ Invalid JSON payload: ${e.message}`, 'error');
+                    logMessage('💡 Example: {"prompt": "Create a test file"}', 'info');
+                    return;
+                }
+            } else if (method === 'POST' || method === 'PUT') {
+                // POST/PUT without payload - use default
+                if (endpoint === '/v1/tasks') {
+                    options.body = JSON.stringify({"prompt": "Test task from web interface"});
+                }
+            }
+            
+            logMessage(`🔄 Executing ${method} ${actualEndpoint}`, 'info');
+            showSpinner('api-spinner');
+            
+            const result = await makeApiCall(actualEndpoint, options);
+            hideSpinner('api-spinner');
+            
+            // Handle task creation response
+            if (result.success && result.data && result.data.task_id) {
+                currentTaskId = result.data.task_id;
+                document.getElementById('task-id').value = currentTaskId;
+                logMessage('📝 Task created successfully', 'success');
+            }
+        }
+        
+        // Workflow functions
+        async function submitWorkflow() {
+            const prompt = document.getElementById('workflow-prompt').value;
+            if (!prompt.trim()) {
+                logMessage('❌ Please enter a task prompt', 'error');
+                return;
+            }
+            
+            logMessage('🚀 Submitting workflow task...', 'info');
+            
+            const result = await makeApiCall('/v1/tasks', {
+                method: 'POST',
+                body: JSON.stringify({ prompt: prompt })
+            });
+            
+            if (result.success && result.data.task_id) {
+                currentTaskId = result.data.task_id;
+                document.getElementById('workflow-task-id').textContent = currentTaskId;
+                document.getElementById('current-workflow').classList.remove('hidden');
+                document.getElementById('check-status-btn').disabled = false;
+                
+                logMessage(`✅ Task created successfully: ${currentTaskId}`, 'success');
+                
+                // Initialize workflow with "pending" status
+                updateWorkflowStatus('pending', {});
+                
+                // Auto-check status after a short delay
+                setTimeout(checkWorkflowStatus, 3000);
+            } else {
+                logMessage('❌ Failed to submit workflow task', 'error');
+            }
+        }
+        
+        async function checkWorkflowStatus() {
+            if (!currentTaskId) return;
+            
+            const result = await makeApiCall(`/v1/tasks/${currentTaskId}`);
+            
+            if (result.success && result.data) {
+                updateWorkflowStatus(result.data.status, result.data);
+            }
+        }
+        
+        function updateWorkflowStatus(status, data) {
+            const badge = document.getElementById('workflow-status-badge');
+            badge.textContent = status;
+            badge.className = `method-badge method-${getStatusColor(status)}`;
+            
+            // Update workflow step visualization
+            updateWorkflowSteps(status);
+            
+            // Enable/disable buttons based on status
+            const checkBtn = document.getElementById('check-status-btn');
+            const approveBtn = document.getElementById('approve-btn');
+            const streamBtn = document.getElementById('stream-btn');
+            
+            // Reset button states
+            approveBtn.disabled = true;
+            streamBtn.disabled = true;
+            
+            if (status === 'pending') {
+                logMessage('⏳ Task submitted, generating plan...', 'info');
+                // Auto-check status again
+                setTimeout(checkWorkflowStatus, 3000);
+            } else if (status === 'awaiting_approval') {
+                approveBtn.disabled = false;
+                logMessage('📝 Plan generated and ready for approval!', 'success');
+                if (data.plan) {
+                    logMessage('📋 Generated Plan:', 'info', data.plan);
+                }
+            } else if (status === 'executing') {
+                streamBtn.disabled = false;
+                logMessage('⚡ Task is executing...', 'info');
+                // Auto-check status during execution
+                setTimeout(checkWorkflowStatus, 5000);
+            } else if (status === 'completed') {
+                logMessage('🎉 Task completed successfully!', 'success');
+                if (data.result) {
+                    logMessage('✅ Task Result:', 'success', data.result);
+                }
+            } else if (status === 'failed') {
+                logMessage('💥 Task execution failed', 'error');
+                if (data.result) {
+                    logMessage('❌ Error Details:', 'error', data.result);
+                }
+            }
+        }
+        
+        function updateWorkflowSteps(status) {
+            // Get all workflow steps
+            const steps = document.querySelectorAll('.workflow-step');
+            
+            // Reset all steps to default state
+            steps.forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            // Map status to step progression
+            const statusMap = {
+                'pending': 1,           // Generate Plan active
+                'awaiting_approval': 2, // Approve Plan active
+                'executing': 3,         // Execute active  
+                'completed': 4,         // Complete active
+                'failed': 3             // Execute active (but failed)
+            };
+            
+            const currentStep = statusMap[status] || 0;
+            
+            // Mark steps as completed or active
+            steps.forEach((step, index) => {
+                if (index < currentStep) {
+                    step.classList.add('completed');
+                } else if (index === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'get',
+                'awaiting_approval': 'post',
+                'executing': 'put',
+                'completed': 'success',
+                'failed': 'delete'
+            };
+            return colors[status] || 'get';
+        }
+        
+        async function approveWorkflow() {
+            if (!currentTaskId) return;
+            
+            logMessage('👍 Approving task plan...', 'info');
+            
+            const result = await makeApiCall(`/v1/tasks/${currentTaskId}/approve`, {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                document.getElementById('approve-btn').disabled = true;
+                logMessage('✅ Plan approved! Task execution started', 'success');
+                
+                // Update status to executing immediately
+                updateWorkflowStatus('executing', {});
+                
+                // Check status more frequently during execution
+                setTimeout(checkWorkflowStatus, 2000);
+            } else {
+                logMessage('❌ Failed to approve task', 'error');
+            }
+        }
+        
+        function streamWorkflow() {
+            if (!currentTaskId) return;
+            
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            const url = `${API_BASE}/v1/tasks/${currentTaskId}/stream`;
+            eventSource = new EventSource(url);
+            
+            logMessage('🌊 Starting result stream...', 'info');
+            document.getElementById('stream-btn').textContent = 'Stop Stream';
+            document.getElementById('stream-btn').onclick = stopStream;
+            
+            eventSource.onmessage = function(event) {
+                if (event.data === '[DONE]') {
+                    logMessage('🏁 Stream completed', 'success');
+                    stopStream();
+                } else {
+                    logMessage('📡 Stream: ' + event.data, 'info');
+                }
+            };
+            
+            eventSource.onerror = function(event) {
+                logMessage('💥 Stream error', 'error');
+                stopStream();
+            };
+        }
+        
+        function stopStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            document.getElementById('stream-btn').textContent = 'Stream Results';
+            document.getElementById('stream-btn').onclick = streamWorkflow;
+            logMessage('⏹️ Stream stopped', 'info');
+        }
+        
+        // Quick action functions
+        async function quickHealthCheck() {
+            logMessage('🏥 Running quick health check...', 'info');
+            const result = await makeApiCall('/docs');
+            
+            if (result.success) {
+                logMessage('✅ Service is healthy and responding', 'success');
+                document.getElementById('health-status').textContent = 'Healthy';
+                document.getElementById('response-time').textContent = result.responseTime + 'ms';
+            } else {
+                logMessage('❌ Service health check failed', 'error');
+                document.getElementById('health-status').textContent = 'Error';
+                document.getElementById('response-time').textContent = '--ms';
+            }
+        }
+        
+        async function quickTaskTest() {
+            logMessage('⚡ Running quick task test...', 'info');
+            
+            // Submit a test task
+            const result = await makeApiCall('/v1/tasks', {
+                method: 'POST',
+                body: JSON.stringify({
+                    prompt: "Create a test file called quick-test.txt with the message 'Quick test from web interface'"
+                })
+            });
+            
+            if (result.success && result.data.task_id) {
+                currentTaskId = result.data.task_id;
+                document.getElementById('task-id').value = currentTaskId;
+                logMessage(`✅ Test task created: ${currentTaskId}`, 'success');
+                
+                // Auto-check status after a delay
+                setTimeout(async () => {
+                    const statusResult = await makeApiCall(`/v1/tasks/${currentTaskId}`);
+                    if (statusResult.success) {
+                        logMessage(`📊 Task status: ${statusResult.data.status}`, 'info');
+                    }
+                }, 2000);
+            } else {
+                logMessage('❌ Failed to create test task', 'error');
+            }
+        }
+        
+        // Health monitoring functions
+        async function runHealthCheck() {
+            const result = await makeApiCall('/docs');
+            
+            if (result.success) {
+                document.getElementById('health-status').textContent = 'Healthy';
+                document.getElementById('response-time').textContent = result.responseTime + 'ms';
+            } else {
+                document.getElementById('health-status').textContent = 'Error';
+                document.getElementById('response-time').textContent = '--ms';
+            }
+        }
+        
+        async function runPerformanceTest() {
+            logMessage('🌐 Running performance test...', 'info');
+            
+            const tests = [];
+            for (let i = 0; i < 5; i++) {
+                tests.push(makeApiCall('/docs'));
+            }
+            
+            const results = await Promise.all(tests);
+            const times = results.filter(r => r.success).map(r => r.responseTime);
+            
+            if (times.length > 0) {
+                const avg = times.reduce((a, b) => a + b, 0) / times.length;
+                const min = Math.min(...times);
+                const max = Math.max(...times);
+                
+                logMessage(`📈 Performance test completed - Avg: ${avg.toFixed(1)}ms, Min: ${min}ms, Max: ${max}ms`, 'success');
+            }
+        }
+        
+        async function runStressTest() {
+            logMessage('🚀 Running stress test (10 concurrent requests)...', 'info');
+            
+            const promises = [];
+            for (let i = 0; i < 10; i++) {
+                promises.push(makeApiCall('/v1/tasks', {
+                    method: 'POST',
+                    body: JSON.stringify({ prompt: `Stress test task ${i + 1}` })
+                }));
+            }
+            
+            const results = await Promise.all(promises);
+            const successful = results.filter(r => r.success).length;
+            const failed = results.length - successful;
+            
+            logMessage(`📊 Stress test completed: ${successful} successful, ${failed} failed`, 
+                      successful === 10 ? 'success' : 'error');
+        }
+        
+        // Overview data loading
+        function loadOverviewData() {
+            // Update metrics
+            document.getElementById('uptime').textContent = formatUptime(Date.now() - performance.timeOrigin);
+            document.getElementById('total-requests').textContent = Math.floor(Math.random() * 1000);
+            document.getElementById('active-tasks').textContent = Math.floor(Math.random() * 10);
+        }
+        
+        function formatUptime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (hours > 0) return `${hours}h ${minutes % 60}m`;
+            if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+            return `${seconds}s`;
+        }
+        
+        // Utility functions
+        function showSpinner(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        
+        function hideSpinner(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+        
+        function clearLog() {
+            document.getElementById('results-log').innerHTML = '';
+            logMessage('🧹 Log cleared', 'info');
+        }
+        
+        function exportResults() {
+            const logs = document.getElementById('results-log').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `agent-runtime-results-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Event handlers
+        document.getElementById('api-endpoint').addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            const method = selected.dataset.method || 'GET';
+            document.getElementById('http-method').value = method;
+            
+            // Show payload section for POST/PUT requests
+            const payloadSection = document.getElementById('payload-section');
+            if (method === 'POST' || method === 'PUT') {
+                payloadSection.style.display = 'block';
+                
+                // Set default payload for common endpoints
+                const payload = document.getElementById('api-payload');
+                if (selected.value === '/v1/tasks' && !payload.value) {
+                    payload.value = '{"prompt": "Create a test file called hello.txt with the message Hello World"}';
+                }
+            } else {
+                payloadSection.style.display = 'none';
+            }
+        });
+        
+        // Auto-refresh current task status
+        function startStatusMonitoring() {
+            // Check if there's a current task that needs monitoring
+            if (currentTaskId) {
+                const statusBadge = document.getElementById('workflow-status-badge');
+                const currentStatus = statusBadge ? statusBadge.textContent : '';
+                
+                // Continue monitoring if task is not completed
+                if (currentStatus && !['completed', 'failed'].includes(currentStatus)) {
+                    checkWorkflowStatus();
+                    setTimeout(startStatusMonitoring, 5000); // Check every 5 seconds
+                }
+            }
+        }
+        
+        // Refresh current task on tab switch
+        function refreshCurrentTask() {
+            if (currentTaskId) {
+                checkWorkflowStatus();
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            logMessage('🚀 Agent Runtime Web Console loaded', 'success');
+            logMessage('💡 Use the tabs above to test different aspects of the service', 'info');
+            loadOverviewData();
+            
+            // Start monitoring any existing tasks
+            setTimeout(startStatusMonitoring, 1000);
+        });
+    </script>
+</body>
+</html>

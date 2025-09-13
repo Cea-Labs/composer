@@ -2,9 +2,9 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from composer_core.services import task_manager
-from composer_core.services import orchestrator
-from composer_core.services.event_service import event_service
+from agent_runtime.services import task_manager
+from agent_runtime.services import orchestrator
+from agent_runtime.services.event_service import event_service
 
 router = APIRouter()
 

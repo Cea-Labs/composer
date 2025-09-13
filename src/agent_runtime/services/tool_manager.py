@@ -4,7 +4,7 @@ import sys
 import json
 from pathlib import Path
 
-# Navigate up to the project root from the current file's location (src/composer_core/services)
+# Navigate up to the project root from the current file's location (src/agent_runtime/services)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 TOOL_REGISTRY_PATH = PROJECT_ROOT / "tool_registry.yaml"
 

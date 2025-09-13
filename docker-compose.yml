@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Development Agent Runtime Service
+  agent-runtime:
+    build:
+      context: .
+      target: development
+    container_name: agent-runtime-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - AGENT_RUNTIME_CONFIG=/app/config.yaml
+      - PYTHONPATH=/app/src
+      # CORS settings for TypeCell integration
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./tool_registry.yaml:/app/tool_registry.yaml:ro
+      - ./logs:/app/logs
+      - ./src/agent_runtime/sample_data:/app/src/agent_runtime/sample_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  # Production Agent Runtime Service
+  agent-runtime-prod:
+    build:
+      context: .
+      target: production
+    container_name: agent-runtime-prod
+    ports:
+      - "8001:8000"
+    environment:
+      - AGENT_RUNTIME_CONFIG=/app/config.yaml
+      - PYTHONPATH=/app/src
+      - CORS_ORIGINS=http://localhost:3000,https://your-typecell-domain.com
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./tool_registry.yaml:/app/tool_registry.yaml:ro
+      - agent_runtime_logs:/app/logs
+      - agent_runtime_data:/app/src/agent_runtime/sample_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: always
+    profiles:
+      - production
+
+  # Production service (commented out by default)
+  # agent-runtime-prod:
+  #   build:
+  #     context: .
+  #     target: production
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - AGENT_RUNTIME_CONFIG=/app/config.yaml
+  #     - PYTHONPATH=/app/src
+  #   volumes:
+  #     - ./config.yaml:/app/config.yaml:ro
+  #     - ./tool_registry.yaml:/app/tool_registry.yaml:ro
+  #     - agent_runtime_logs:/app/logs
+  #     - agent_runtime_data:/app/src/agent_runtime/sample_data
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 5s
+  #   restart: always
+
+volumes:
+  agent_runtime_logs:
+  agent_runtime_data:

@@ -46,7 +46,7 @@ trap cleanup EXIT
 echo "--- Preparing Server ---"
 
 # Set the config file to be used for the test
-export COMPOSER_CONFIG="$PWD/config.yaml"
+export AGENT_RUNTIME_CONFIG="$PWD/config.yaml"
 
 # Ensure the log file from a previous run is gone
 rm -f "$SERVER_LOG"

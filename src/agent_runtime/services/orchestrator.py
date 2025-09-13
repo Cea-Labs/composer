@@ -1,11 +1,11 @@
 import asyncio
 from datetime import datetime
 
-from composer_core.services.agent_service import AgentService
-from composer_core.services.tool_registry import ToolRegistry
-from composer_core.services import task_manager
-from composer_core.constants import PROJECT_ROOT
-from composer_core.services.event_service import event_service
+from agent_runtime.services.agent_service import AgentService
+from agent_runtime.services.tool_registry import ToolRegistry
+from agent_runtime.services import task_manager
+from agent_runtime.constants import PROJECT_ROOT
+from agent_runtime.services.event_service import event_service
 
 CONFIG_PATH = PROJECT_ROOT / "config.yaml"
 LOGS_DIR = PROJECT_ROOT / "logs"

@@ -4,7 +4,7 @@ import yaml
 from contextlib import asynccontextmanager
 
 from agents.mcp import MCPServer, MCPServerStdio, MCPServerStreamableHttp
-from composer_core.constants import PROJECT_ROOT
+from agent_runtime.constants import PROJECT_ROOT
 # In the future, we would add MCPServerSse and MCPServerStreamableHttp here
 
 class ToolRegistry:

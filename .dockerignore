@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.venv
+venv
+.env
+
+# Poetry (not needed with uv)
+poetry.lock
+
+# Documentation  
+docs/
+# Keep README.md for hatchling build
+# *.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs (except directory)
+logs/*
+!logs/.gitkeep
+
+# Test files
+test_*.py
+*_test.py
+test_flows/
+tests/
+
+# Reference materials
+reference/
+
+# Development only
+.claude/
+Dockerfile.dev
+docker-compose.dev.yml
+
+# Temporary files
+*.tmp
+*.temp
+.cache
